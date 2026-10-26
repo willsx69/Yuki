@@ -1,13 +1,30 @@
 import type { Metadata } from "next";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
-import { ComingSoon } from "@/components/shared/coming-soon";
+import { LocalImportCard } from "@/components/settings/local-import-card";
+import { ProfileSettingsForm } from "@/components/settings/profile-settings-form";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export const metadata: Metadata = { title: "Configurações" };
 
 export default function ConfiguracoesPage() {
+  const supabaseConfigured = isSupabaseConfigured();
+
   return (
     <div className="space-y-4">
+      <Card>
+        <CardHeader>
+          <CardTitle>Perfil e preferências</CardTitle>
+          <CardDescription>
+            Seus dados de exibição e preferências. E-mail e senha são gerenciados com
+            segurança pelo sistema de autenticação.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ProfileSettingsForm />
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Aparência</CardTitle>
@@ -28,16 +45,7 @@ export default function ConfiguracoesPage() {
         </CardContent>
       </Card>
 
-      <ComingSoon
-        title="Demais configurações"
-        description="Perfil, categorias padrão e preferências de notificação serão adicionados nas próximas etapas."
-        features={[
-          "Edição de nome, e-mail e foto do perfil",
-          "Criação e organização de categorias",
-          "Preferências de notificação e alertas",
-          "Definição de moeda, start do mês e formato de data",
-        ]}
-      />
+      <LocalImportCard supabaseConfigured={supabaseConfigured} />
     </div>
   );
 }

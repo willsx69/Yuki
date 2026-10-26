@@ -44,7 +44,8 @@ function nowISO(): string {
   return new Date().toISOString();
 }
 
-function assertValidDraft(draft: TransactionDraft): void {
+/** Validações do rascunho — compartilhadas com o repositório remoto. */
+export function assertValidDraft(draft: TransactionDraft): void {
   if (draft.type !== "income" && draft.type !== "expense") {
     throw new Error("Tipo de transação inválido.");
   }

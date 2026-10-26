@@ -1,5 +1,5 @@
 import { monthKeyOf, type MonthKey } from "@/lib/transactions/finance";
-import type { Bill, BillType } from "./types";
+import type { Bill, BillDraft, BillType } from "./types";
 
 /**
  * Regras de cálculo do módulo de contas a pagar/receber (Etapa 3).
@@ -161,6 +161,31 @@ export function planInstallments(
     dueDate: addMonthsToDate(firstDueDate, index),
     amountCents: amount,
   }));
+}
+
+/**
+ * Plano de parcelas de um rascunho (usado pelos repositórios local e
+ * remoto, para que a matemática seja uma só):
+ * - dívidas (perInstallmentAmount + debtId): cada parcela tem o mesmo valor
+ *   e vencimentos mensais consecutivos a partir da data informada;
+ * - contas avulsas: o total é dividido entre as parcelas.
+ */
+export function buildInstallmentPlan(draft: BillDraft): InstallmentPlanItem[] {
+  const start = draft.installmentStart ?? 1;
+  const generate = draft.installmentsToGenerate ?? draft.totalInstallments;
+
+  if (draft.perInstallmentAmount && draft.debtId) {
+    return Array.from({ length: generate }, (_, index) => ({
+      installmentNumber: start + index,
+      dueDate: addMonthsToDate(draft.dueDate, index),
+      amountCents: draft.amountCents,
+    }));
+  }
+
+  return planInstallments(draft.amountCents, draft.totalInstallments, draft.dueDate).slice(
+    start - 1,
+    start - 1 + generate,
+  );
 }
 
 /**

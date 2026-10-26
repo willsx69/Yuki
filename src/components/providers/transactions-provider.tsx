@@ -10,10 +10,11 @@ import {
   useState,
 } from "react";
 import { sortByDateDesc } from "@/lib/transactions/finance";
-import { isLocalStorageAvailable } from "@/lib/transactions/local-repository";
 import { createTransactionRepository } from "@/lib/transactions/repository";
 import type { TransactionRepository } from "@/lib/transactions/repository";
 import type { Category, Transaction, TransactionDraft } from "@/lib/transactions/types";
+import { isPersistenceAvailable } from "@/lib/persistence";
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 /**
  * Fonte única de dados das transações do usuário.
@@ -87,8 +88,12 @@ export function TransactionsProvider({ children }: { children: React.ReactNode }
       .then((items) => {
         if (cancelled) return;
         setTransactions(sortByDateDesc(items));
-        setModeState(readStoredMode() ?? (items.length > 0 ? "mine" : "demo"));
-        setPersistent(isLocalStorageAvailable());
+        // Conta autenticada começa em "Meus lançamentos" (mesmo vazia);
+        // no modo local provisório, sem dados o dashboard mostra o exemplo.
+        setModeState(
+          readStoredMode() ?? (items.length > 0 || isSupabaseConfigured() ? "mine" : "demo"),
+        );
+        setPersistent(isPersistenceAvailable());
         setError(null);
         setStatus("ready");
       })

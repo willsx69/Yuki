@@ -1,4 +1,6 @@
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { LocalStorageDebtRepository } from "./local-repository";
+import { SupabaseDebtRepository } from "./supabase-repository";
 import type { Debt, DebtDraft } from "./types";
 
 /**
@@ -8,11 +10,9 @@ import type { Debt, DebtDraft } from "./types";
  * de provider (DebtsProvider), que usa este repositório para a dívida e o
  * repositório de bills para as parcelas.
  *
- * MIGRAÇÃO PARA POSTGRESQL/SUPABASE:
- * 1. Criar as tabelas descritas em `supabase/schema.sql`;
- * 2. Configurar NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY;
- * 3. Implementar `SupabaseDebtRepository` cumprindo esta interface;
- * 4. Trocar a fábrica abaixo. Nenhuma alteração será necessária na UI.
+ * ETAPA 3 — multiusuário: com o Supabase configurado a fábrica devolve
+ * `SupabaseDebtRepository` (sessão em cookies + RLS); sem credenciais,
+ * mantém a camada local provisória (localStorage). A UI não muda.
  */
 export interface DebtRepository {
   list(): Promise<Debt[]>;
@@ -26,15 +26,8 @@ export interface DebtRepository {
 }
 
 export function createDebtRepository(): DebtRepository {
-  if (
-    typeof process !== "undefined" &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    throw new Error(
-      "Credenciais do Supabase detectadas, mas o repositório remoto ainda não foi implementado. " +
-        "Remova as variáveis ou implemente SupabaseDebtRepository.",
-    );
+  if (isSupabaseConfigured()) {
+    return new SupabaseDebtRepository();
   }
 
   return new LocalStorageDebtRepository();

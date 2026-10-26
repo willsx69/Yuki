@@ -14,7 +14,7 @@ import { sortBillsForList, transactionTypeForBill } from "@/lib/bills/finance";
 import { createBillRepository } from "@/lib/bills/repository";
 import type { BillRepository } from "@/lib/bills/repository";
 import type { Bill, BillDraft, BillUpdateDraft } from "@/lib/bills/types";
-import { isLocalStorageAvailable } from "@/lib/transactions/local-repository";
+import { isPersistenceAvailable } from "@/lib/persistence";
 import { todayISODate } from "@/lib/transactions/finance";
 
 /**
@@ -70,7 +70,7 @@ export function BillsProvider({ children }: { children: React.ReactNode }) {
       .then((items) => {
         if (cancelled) return;
         setBills(sortBillsForList(items, todayISODate()));
-        setPersistent(isLocalStorageAvailable());
+        setPersistent(isPersistenceAvailable());
         setError(null);
         setStatus("ready");
       })

@@ -1,19 +1,20 @@
+import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { LocalStorageTransactionRepository } from "./local-repository";
+import { SupabaseTransactionRepository } from "./supabase-repository";
 import type { Transaction, TransactionDraft } from "./types";
 
 /**
  * Contrato de persistência das transações.
  *
- * ETAPA 2 — implementação provisória: enquanto não houver credenciais de
- * banco configuradas, `createTransactionRepository()` devolve o repositório
- * local (`local-repository.ts`), que salva os dados no localStorage do
- * navegador (sobrevive a navegação e recarregamento da página).
+ * ETAPA 3 — multiusuário:
+ * - Com `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+ *   configuradas, a fábrica devolve `SupabaseTransactionRepository`
+ *   (`supabase-repository.ts`), autenticado por sessão (cookies) e isolado
+ *   por Row Level Security no banco;
+ * - Sem credenciais, mantém a camada local provisória
+ *   (`local-repository.ts`, localStorage deste navegador).
  *
- * MIGRAÇÃO PARA POSTGRESQL/SUPABASE:
- * 1. Criar as tabelas descritas em `supabase/schema.sql`;
- * 2. Configurar NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_ANON_KEY;
- * 3. Implementar `SupabaseTransactionRepository` cumprindo esta interface;
- * 4. Trocar a fábrica abaixo. Nenhuma alteração será necessária na UI.
+ * A UI consome apenas esta interface — nenhuma tela precisa mudar.
  */
 export interface TransactionRepository {
   list(): Promise<Transaction[]>;
@@ -23,18 +24,8 @@ export interface TransactionRepository {
 }
 
 export function createTransactionRepository(): TransactionRepository {
-  // Sem credenciais de banco externo nesta etapa: usa a camada local.
-  // Quando o Supabase estiver configurado, esta fábrica passará a devolver
-  // a implementação remota (as credenciais nunca são escritas no código).
-  if (
-    typeof process !== "undefined" &&
-    process.env.NEXT_PUBLIC_SUPABASE_URL &&
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  ) {
-    throw new Error(
-      "Credenciais do Supabase detectadas, mas o repositório remoto ainda não foi implementado. " +
-        "Remova as variáveis ou implemente SupabaseTransactionRepository.",
-    );
+  if (isSupabaseConfigured()) {
+    return new SupabaseTransactionRepository();
   }
 
   return new LocalStorageTransactionRepository();

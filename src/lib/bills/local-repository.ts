@@ -1,5 +1,5 @@
 import { isValidISODate } from "@/lib/transactions/finance";
-import { addMonthsToDate, planInstallments } from "./finance";
+import { buildInstallmentPlan } from "./finance";
 import type { BillRepository } from "./repository";
 import type { Bill, BillDraft, BillUpdateDraft } from "./types";
 
@@ -45,7 +45,8 @@ function assertValidAmount(amountCents: number): void {
   }
 }
 
-function assertValidBase(draft: BillDraft): void {
+/** Validações do rascunho — compartilhadas com o repositório remoto. */
+export function assertValidBillDraft(draft: BillDraft): void {
   if (draft.type !== "payable" && draft.type !== "receivable") {
     throw new Error("Tipo de conta inválido.");
   }
@@ -119,26 +120,12 @@ export class LocalStorageBillRepository implements BillRepository {
   }
 
   async createDraft(draft: BillDraft): Promise<Bill[]> {
-    assertValidBase(draft);
+    assertValidBillDraft(draft);
 
-    const start = draft.installmentStart ?? 1;
-    const generate = draft.installmentsToGenerate ?? draft.totalInstallments;
     const groupId = draft.totalInstallments > 1 ? newId() : null;
     const timestamp = nowISO();
 
-    // Dívidas: cada parcela tem o mesmo valor (amountCents = valor da parcela)
-    // e vencimentos mensais consecutivos a partir da data informada.
-    const plans =
-      draft.perInstallmentAmount && draft.debtId
-        ? Array.from({ length: generate }, (_, index) => ({
-            installmentNumber: start + index,
-            dueDate: addMonthsToDate(draft.dueDate, index),
-            amountCents: draft.amountCents,
-          }))
-        : planInstallments(draft.amountCents, draft.totalInstallments, draft.dueDate).slice(
-            start - 1,
-            start - 1 + generate,
-          );
+    const plans = buildInstallmentPlan(draft);
 
     const created: Bill[] = plans.map((item) => ({
       id: newId(),

@@ -1,20 +1,25 @@
 -- ============================================================================
--- Finora — proposta de schema PostgreSQL/Supabase (ETAPA 3)
+-- Yuki — referência de schema PostgreSQL/Supabase (ETAPA 3)
 --
--- ESTE ARQUIVO AINDA NÃO É APLICADO. Ele documenta o modelo definitivo para
--- quando as variáveis de ambiente do Supabase forem configuradas.
+-- >>> A FONTE DA VERDADE É A PASTA supabase/migrations/ <<<
+--   00001_financial_tables.sql  — transações, contas, dívidas + RLS
+--   00002_profiles.sql          — perfis, trigger de cadastro + RLS
+--   00003_seed_categories.sql   — categorias padrão (IDs iguais aos do frontend)
 --
--- Passos da migração:
---   1. Executar este script no SQL editor do Supabase (ou via migração);
+-- Aplique as migrações no SQL Editor do Supabase (na ordem) ou via CLI
+-- (`supabase db push`). Este arquivo permanece como documentação do modelo.
+--
+-- Passos da configuração:
+--   1. Aplicar as migrações supabase/migrations/*.sql no projeto Supabase;
 --   2. Definir no .env.local:
 --        NEXT_PUBLIC_SUPABASE_URL=<url do projeto>
 --        NEXT_PUBLIC_SUPABASE_ANON_KEY=<chave anon>
---   3. Implementar SupabaseTransactionRepository, SupabaseBillRepository e
---      SupabaseDebtRepository cumprindo os contratos de
---      src/lib/transactions/repository.ts, src/lib/bills/repository.ts e
---      src/lib/debts/repository.ts e trocar as fábricas;
---   4. Migrar os dados do localStorage (finora:transactions:v1,
---      finora:bills:v1 e finora:debts:v1) para as tabelas.
+--      (as fábricas de repositório passam a usar Supabase automaticamente);
+--   3. Configurar no painel do Supabase:
+--        Authentication → URL Configuration → Site URL e Redirect URLs
+--        (incluir http://localhost:3000/auth/callback em desenvolvimento);
+--   4. (Opcional) importar dados antigos do localStorage pelo botão
+--      "Importar dados deste navegador" em Configurações.
 --
 -- Observações de modelagem:
 --   * Valores em centavos (integer), iguais aos usados na aplicação — evita
